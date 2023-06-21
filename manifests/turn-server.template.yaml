@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: turn-server
+  labels:
+    app: turn-server
+spec:
+  selector:
+    matchLabels:
+      app: turn-server
+  template:
+    metadata:
+      labels:
+        app: turn-server
+    spec:
+      hostNetwork: true
+      containers:
+        - name: turn-server
+          image: __ACCOUNT_ID__.dkr.ecr.__REGION__.amazonaws.com/turn-server:latest
+          ports:
+            - containerPort: 3478
