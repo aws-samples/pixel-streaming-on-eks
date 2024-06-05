@@ -3,9 +3,9 @@ set -eu
 
 # Install nvidia-driver and cuda
 sudo yum install -y gcc kernel-devel-$(uname -r)
-wget https://developer.download.nvidia.com/compute/cuda/12.0.1/local_installers/cuda_12.0.1_525.85.12_linux.run
-chmod +x ./cuda_12.0.1_525.85.12_linux.run
-sudo CC=/usr/bin/gcc10-cc ./cuda_12.0.1_525.85.12_linux.run --silent
+#wget https://developer.download.nvidia.com/compute/cuda/12.0.1/local_installers/cuda_12.0.1_525.85.12_linux.run
+#chmod +x ./cuda_12.0.1_525.85.12_linux.run
+#sudo CC=/usr/bin/gcc10-cc ./cuda_12.0.1_525.85.12_linux.run --silent
 sudo touch /etc/modprobe.d/nvidia.conf
 echo "options nvidia NVreg_EnableGpuFirmware=0" | sudo tee --append /etc/modprobe.d/nvidia.conf
 

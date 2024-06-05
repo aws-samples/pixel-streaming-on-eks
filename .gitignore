@@ -382,5 +382,6 @@ yarn.lock
 cdk.out
 
 containers/pixel-streaming/ue5-sample/
+containers/pixel-streaming/uepackage/
 manifests/pixel-streaming.yaml
 manifests/turn-server.yaml

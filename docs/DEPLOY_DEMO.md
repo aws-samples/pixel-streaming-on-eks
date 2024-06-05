@@ -4,8 +4,9 @@
 Please ensure your environment meets the following requirements necessary for deployment.
 - The required AWS IAM permissions (IAM roles, IAM users, etc.) are set.
     - Administrator-level privileges are necessary.
-- You're logged in to Docker with a GitHub account linked to your Unreal Engine account.
-    - For authentication methods, please refer to  [Working with the Container registry](https://docs.github.com/ja/packages/working-with-a-github-packages-registry/working-with-the-container-registry#container-registry%E3%81%A7%E3%81%AE%E8%AA%8D%E8%A8%BC).
+- You're logged in to Docker with a GitHub account linked to your Unreal Engine account. << TODO Do we need this if we use own game binary?
+    - For authentication methods, please refer to  [Working with the Container registry](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry#container-registry%E3%81%A7%E3%81%AE%E8%AA%8D%E8%A8%BC).
+    TODO personal access token classic, scope: read/write/delete:packages
 - The necessary software is installed.
     - Node.js (LTS version)
     - Docker
@@ -15,13 +16,19 @@ Please ensure your environment meets the following requirements necessary for de
     - kubectl
     - helm
 
+TODO What about putting the game binary in a folder where it can be packaged up with the container and deployed to EKS? 
+TODO 
+
 ## Building the AMI
 
 Build an AMI to handle the latest GPU Driver for EKS.
 
 1. Navigate to the packer directory, and build.
 
+TODO Update `eks-gpu-node.json` region, AMI owner?, k8 version, cuda version, ...
+
 ```
+$ packer plugins install github.com/hashicorp/amazon
 $ cd pixel-streaming-on-eks/packer
 $ packer build eks-gpu-node.json
 ```
@@ -92,6 +99,7 @@ UnrealPixelStreamingStack.EksClusterGetTokenCommandDF0BEDB9 = aws eks get-token 
 ```
 
 6. The line beginning with `UnrealPixelStreamingStack.EksClusterConfigCommand` that is output to the log is the command to configure kubectl. Copy and paste it to execute.
+TODO This output wasn't created ...
 ```
 $ aws eks update-kubeconfig --name EksClusterFAB68BDB-25b7897febe6406db6795748575ae956 --region ap-northeast-1 --role-arn arn:aws:iam::...
 ```
@@ -106,7 +114,7 @@ $ helm repo update
 $ helm upgrade -i nvdp nvdp/nvidia-device-plugin \
     --namespace nvidia-device-plugin \
     --create-namespace \
-    --version 0.13.0 \
+    --version 0.15.0 \
     --set-file config.map.config=./manifests/nvidia-device-plugin-config.yaml
 ```
 

@@ -1,11 +1,12 @@
 # How to Create a Pixel Streaming Project in Unreal Engine
 
 ## Summary
-- Build instructions for Pixel Streaming project to be used with EKS
+- Build instructions for Pixel Streaming project to be used with Amazon Elastic Kubernetes Service
 
 ## Prerequisites
-- OS : Windows
-- UE : 5.0.3
+- Operating System : Windows 10 or higher
+- Unreal Engine : 5.0.3 or higher
+- Visual Studio 2019 or higher
 
 ## Downloading UE and Creating a Project
 - Download and launch the Epic Games Launcher, select Unreal Engine > Library, click on the "+" on the right of ENGINE VERSIONS, and select the version you want to download.
@@ -27,9 +28,14 @@
 
 ## Cross-compiling for Linux
 - To cross-compile for Linux, download and install clang.
-The version of clang required varies based on the UE version. For 5.0.3, use lang-13.0.1-based.
+The version of clang required varies based on the Unreal Engine version. For example, for 5.0.3 use clang-13.0.1-based.
     - https://cdn.unrealengine.com/CrossToolchain_Linux/v20_clang-13.0.1-centos7.exe
-- After downloading and installing, restart UE. You can now select Linux from the Platforms in UE, and compile for Linux.
+- After downloading and installing, restart Unreal Engine. 
+- Verify that the installation was successful
+TODO insert screenshot
+- You can now select Linux from the Platforms in Unreal Engine, and compile for Linux.
+
+TODO Copy the package to the `containers/pixel-streaming/ue5-sample/` directory
 
 ### References
 - https://docs.unrealengine.com/5.1/en-US/linux-development-requirements-for-unreal-engine/

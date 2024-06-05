@@ -1,7 +1,7 @@
 import * as cdk from 'aws-cdk-lib'
 import { Construct } from 'constructs'
 import * as eks from 'aws-cdk-lib/aws-eks'
-import { KubectlV24Layer } from '@aws-cdk/lambda-layer-kubectl-v24'
+import { KubectlV29Layer } from '@aws-cdk/lambda-layer-kubectl-v29'
 import * as ec2 from 'aws-cdk-lib/aws-ec2'
 import * as iam from 'aws-cdk-lib/aws-iam'
 import { readFileSync } from 'fs'
@@ -13,15 +13,19 @@ export class EksClusterStack extends cdk.Stack {
     // EKS Cluster
     const cluster = new eks.Cluster(this, 'EksCluster', {
       clusterName: 'PrototypeEksCluster',
-      version: eks.KubernetesVersion.V1_24,
-      kubectlLayer: new KubectlV24Layer(this, 'KubectlLayer'),
+      version: eks.KubernetesVersion.V1_29,
+      kubectlLayer: new KubectlV29Layer(this, 'KubectlLayer'),
       // Custom Node を使うので DefaultCapacity は 0 にしておく
       defaultCapacity: 0,
     })
 
     // Configure aws-auth to allow IAM Role for Admin to access EKS Cluster
     // https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_eks-readme.html#permissions-and-security
-    const adminRole = iam.Role.fromRoleName(this, 'AdminRole', 'Admin')
+    // This line is creating an IAM (Identity and Access Management) role object named adminRole by referencing an existing role with 
+    // the name "Administrator". This role will be used to grant administrative access to the EKS cluster.
+    const adminRole = iam.Role.fromRoleName(this, 'AdminRole', 'Administrator')
+    // This line is adding the adminRole  to the list of master roles for the EKS cluster. 
+    // This means that users or applications with the "Administrator" IAM role will have administrative access to the Kubernetes cluster.
     cluster.awsAuth.addMastersRole(adminRole)
 
     // For user
@@ -36,7 +40,7 @@ export class EksClusterStack extends cdk.Stack {
         }
     )
 
-    const allowedIpRange = ec2.Peer.ipv4('59.138.151.0/24')
+    const allowedIpRange = ec2.Peer.ipv4('81.129.122.0/24')
 
     nodePortSecurityGroup.addIngressRule(
         allowedIpRange,
@@ -66,7 +70,7 @@ export class EksClusterStack extends cdk.Stack {
         'NodeLaunchTemplate',
         {
           launchTemplateData: {
-            imageId: 'ami-07cb6d290e2501de3',
+            imageId: 'ami-078abb442ea3350cd',
             instanceType: 'g4dn.xlarge',
             securityGroupIds: [
               cluster.clusterSecurityGroupId,
