@@ -6,7 +6,7 @@ const cdk = require("aws-cdk-lib");
 const eks_cluster_stack_1 = require("../lib/eks-cluster-stack");
 const docker_image_stack_1 = require("../lib/docker-image-stack");
 const app = new cdk.App();
-const region = 'us-west-2';
+const region = 'eu-west-2';
 const prefix = 'UnrealPixelStreaming';
 new eks_cluster_stack_1.EksClusterStack(app, prefix + 'EksClusterStack', {
     env: { account: process.env.CDK_DEFAULT_ACCOUNT, region },

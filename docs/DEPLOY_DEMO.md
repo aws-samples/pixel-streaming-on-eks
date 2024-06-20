@@ -101,7 +101,7 @@ UnrealPixelStreamingStack.EksClusterGetTokenCommandDF0BEDB9 = aws eks get-token 
 6. The line beginning with `UnrealPixelStreamingStack.EksClusterConfigCommand` that is output to the log is the command to configure kubectl. Copy and paste it to execute.
 TODO This output wasn't created ...
 ```
-$ aws eks update-kubeconfig --name EksClusterFAB68BDB-25b7897febe6406db6795748575ae956 --region ap-northeast-1 --role-arn arn:aws:iam::...
+$ aws eks update-kubeconfig --name PrototypeEksCluster --region <REGION>
 ```
 
 ## Setting Up EKS to Handle GPU

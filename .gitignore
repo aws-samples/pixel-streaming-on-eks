@@ -382,6 +382,9 @@ yarn.lock
 cdk.out
 
 containers/pixel-streaming/ue5-sample/
-containers/pixel-streaming/uepackage/
 manifests/pixel-streaming.yaml
 manifests/turn-server.yaml
+# git ignore all Unreal Engine package files, except the placeholder file
+containers/pixel-streaming/uepackage/* 
+!containers/pixel-streaming/uepackage/place-unreal-package-here.txt
+#

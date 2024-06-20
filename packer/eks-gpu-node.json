@@ -7,7 +7,7 @@
       "ssh_username": "ec2-user",
       "source_ami_filter": {
         "filters": {
-          "name": "amazon-eks-node-1.24-v*"
+          "name": "amazon-eks-node-1.30-v*"
         },
         "owners": ["602401143452"],
         "most_recent": true

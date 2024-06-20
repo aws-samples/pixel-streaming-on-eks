@@ -1,29 +1,37 @@
 #!/usr/bin/env bash
 set -eu
 
+# Install nvidia-container-toolkit: https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html#installing-with-yum-or-dnf
+curl -s -L https://nvidia.github.io/libnvidia-container/stable/rpm/nvidia-container-toolkit.repo | \
+sudo tee /etc/yum.repos.d/nvidia-container-toolkit.repo
+sudo yum-config-manager --enable nvidia-container-toolkit-experimental
+sudo yum install -y nvidia-container-toolkit
+
+
 # Install nvidia-driver and cuda
 sudo yum install -y gcc kernel-devel-$(uname -r)
-#wget https://developer.download.nvidia.com/compute/cuda/12.0.1/local_installers/cuda_12.0.1_525.85.12_linux.run
-#chmod +x ./cuda_12.0.1_525.85.12_linux.run
-#sudo CC=/usr/bin/gcc10-cc ./cuda_12.0.1_525.85.12_linux.run --silent
+aws s3 cp --recursive s3://ec2-linux-nvidia-drivers/latest/ .
+chmod +x NVIDIA-Linux-x86_64*.run
+sudo CC=/usr/bin/gcc10-cc ./NVIDIA-Linux-x86_64*.run
+
 sudo touch /etc/modprobe.d/nvidia.conf
 echo "options nvidia NVreg_EnableGpuFirmware=0" | sudo tee --append /etc/modprobe.d/nvidia.conf
 
-# Install nvidia-container-runtime
-distribution=$(. /etc/os-release;echo $ID$VERSION_ID)
-curl -s -L https://nvidia.github.io/nvidia-container-runtime/$distribution/nvidia-container-runtime.repo |   sudo tee /etc/yum.repos.d/nvidia-container-runtime.repo
-sudo yum install -y nvidia-container-runtime
+# Install nvidia-container-runtime DEPRECATED
+# distribution=$(. /etc/os-release;echo $ID$VERSION_ID)
+# curl -s -L https://nvidia.github.io/nvidia-container-runtime/$distribution/nvidia-container-runtime.repo |   sudo tee /etc/yum.repos.d/nvidia-container-runtime.repo
+# sudo yum install -y nvidia-container-runtime
 
 # Configuration for docker to use GPU
 # This setting is optional because Kubernetes 1.24 does NOT use Docker runtime.
 # https://kubernetes.io/blog/2020/12/02/dont-panic-kubernetes-and-docker/
-sudo mkdir -p /etc/systemd/system/docker.service.d
-sudo tee /etc/systemd/system/docker.service.d/override.conf <<EOF
-[Service]
-ExecStart=
-ExecStart=/usr/bin/dockerd --host=fd:// --add-runtime=nvidia=/usr/bin/nvidia-container-runtime
-EOF
-sudo systemctl daemon-reload
+# sudo mkdir -p /etc/systemd/system/docker.service.d
+# sudo tee /etc/systemd/system/docker.service.d/override.conf <<EOF
+# [Service]
+# ExecStart=
+# ExecStart=/usr/bin/dockerd --host=fd:// --add-runtime=nvidia=/usr/bin/nvidia-container-runtime
+# EOF
+# sudo systemctl daemon-reload
 # sudo systemctl restart docker
 
 # Configuration for containerd to use GPU
