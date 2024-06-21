@@ -2,6 +2,8 @@
 
 ## Prerequisites
 Please ensure your environment meets the following requirements necessary for deployment.
+
+- You have built an Unreal Engine Pixel Streaming application using the instructions [here](./UNREAL_ENGINE_EN.md)
 - The required AWS IAM permissions (IAM roles, IAM users, etc.) are set.
     - Administrator-level privileges are necessary.
 - You're logged in to Docker with a GitHub account linked to your Unreal Engine account. << TODO Do we need this if we use own game binary?
