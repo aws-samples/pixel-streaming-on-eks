@@ -9,8 +9,9 @@ Sample code for deploying Unreal Engine Pixel Streaming on Amazon EKS. To deploy
 
 ## Deployment
 
-    1. First follow the instructions on how to build an Unreal Engine Pixel Streaming application [here](./docs/UNREAL_ENGINE.md)
-    2. Then build the node AMI and deploy the EKS cluster and container images using the instructions [here](./docs/DEPLOY_DEMO.md)
+1. First follow the instructions on how to build an Unreal Engine Pixel Streaming application [here](./docs/UNREAL_ENGINE_EN.md)
+
+2. Then build the node AMI and deploy the EKS cluster and container images using the instructions [here](./docs/DEPLOY_DEMO.md)
 
 
 ## Important Notes
