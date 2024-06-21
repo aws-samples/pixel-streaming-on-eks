@@ -23,24 +23,7 @@
     - In the Level Editor > Play category, set the following values for Additional Launch Parameters:
         - ``` -AudioMixer -PixelStreamingIP=localhost -PixelStreamingPort=8888 ```
 
-### References
-- https://docs.unrealengine.com/5.0/en-US/getting-started-with-pixel-streaming-in-unreal-engine/
-
-## Cross-compiling for Linux
-- To cross-compile for Linux, download and install clang.
-The version of clang required varies based on the Unreal Engine version. For example, for 5.0.3 use clang-13.0.1-based.
-    - https://cdn.unrealengine.com/CrossToolchain_Linux/v20_clang-13.0.1-centos7.exe
-- After downloading and installing, restart Unreal Engine. 
-- Verify that the installation was successful
-TODO insert screenshot
-- You can now select Linux from the Platforms in Unreal Engine, and compile for Linux.
-
-TODO Copy the package to the `containers/pixel-streaming/ue5-sample/` directory
-
-### References
-- https://docs.unrealengine.com/5.1/en-US/linux-development-requirements-for-unreal-engine/
-
-## (Optional) How to Show and Hide the Controller
+### (Optional) How to Show and Hide the Controller
 - Displaying the Controller
     - From the UE menu, select Edit > Project Settings > Input.
     - Check the Always Show Touch Interface under Mobile to display the controller.
@@ -53,3 +36,24 @@ TODO Copy the package to the `containers/pixel-streaming/ue5-sample/` directory
     - Set the New Touch Interface you want to display when you want to show it, and leave the New Touch Interface unset when you want to hide it.
         - Example
             - ![](./images/DocForUnrealEngine.png "")
+
+### References
+- https://docs.unrealengine.com/5.0/en-US/getting-started-with-pixel-streaming-in-unreal-engine/
+
+## Cross-compiling for Linux
+- To cross-compile for Linux, download and install clang.
+The version of clang required varies based on the Unreal Engine version. For example, for 5.0.3 use clang-13.0.1-based.
+    - https://cdn.unrealengine.com/CrossToolchain_Linux/v20_clang-13.0.1-centos7.exe
+- After downloading and installing, restart Unreal Engine. 
+- Verify that the installation was successful
+TODO insert screenshot
+- You can now select Linux from the Platforms in Unreal Engine, and compile for Linux.
+
+
+### References
+- https://docs.unrealengine.com/5.1/en-US/linux-development-requirements-for-unreal-engine/
+
+## Copy the application package to the `containers` directory
+
+Copy all the Unreal Engine application files from the package output directory on the workstation running the Unreal Engine Editor, to the [`containers/pixel-streaming/uepackage`](../containers/pixel-streaming/uepackage/) folder. From there, they will be picked up by the [Dockerfile](../containers/pixel-streaming/Dockerfile) and included in the pixel streaming container image pushed to the [Amazon Elastic Container Registry (ECR)](https://aws.amazon.com/ecr/) repository and deployed to the [Amazon EKS](https://aws.amazon.com/eks/) cluster.
+

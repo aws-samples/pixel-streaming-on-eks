@@ -2,17 +2,17 @@
   "builders": [
     {
       "type": "amazon-ebs",
-      "region": "eu-west-2",
+      "region": "{{ var 'region' }}",
       "instance_type": "g4dn.xlarge",
       "ssh_username": "ec2-user",
       "source_ami_filter": {
         "filters": {
-          "name": "amazon-eks-node-1.30-v*"
+          "name": "amazon-eks-node-{{ var 'k8_version' }}-v*"
         },
         "owners": ["602401143452"],
         "most_recent": true
       },
-      "ami_name": "eks-gpu-node-1.30-{{timestamp}}",
+      "ami_name": "eks-gpu-node-{{ var 'k8_version' }}-{{timestamp}}",
       "tags": {
         "Base_AMI_ID": "{{ .SourceAMI }}",
         "Base_AMI_NAME": "{{ .SourceAMIName }}"

@@ -10,10 +10,13 @@ sudo yum install -y nvidia-container-toolkit
 
 # Install nvidia-driver and cuda
 sudo yum install -y gcc kernel-devel-$(uname -r)
+echo "* * Downloading NVIDIA drivers * *"
 aws s3 cp --recursive s3://ec2-linux-nvidia-drivers/latest/ .
 chmod +x NVIDIA-Linux-x86_64*.run
-sudo CC=/usr/bin/gcc10-cc ./NVIDIA-Linux-x86_64*.run
+echo "* * Installing the NVIDIA drivers * *"
+sudo CC=/usr/bin/gcc10-cc ./NVIDIA-Linux-x86_64*.run --silent
 
+echo "* * Setting up NVIDIA drivers for containerd * *"
 sudo touch /etc/modprobe.d/nvidia.conf
 echo "options nvidia NVreg_EnableGpuFirmware=0" | sudo tee --append /etc/modprobe.d/nvidia.conf
 
@@ -47,5 +50,6 @@ sudo tee -a /etc/eks/containerd/containerd-config.toml << EOS
    BinaryName = "/usr/bin/nvidia-container-runtime"
 EOS
 
+echo "* * Restarting containerd * *"
 sudo systemctl restart containerd
 # sudo systemctl restart kubelet

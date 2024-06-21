@@ -10,87 +10,99 @@ Please ensure your environment meets the following requirements necessary for de
 - The necessary software is installed.
     - Node.js (LTS version)
     - Docker
-        - If you're using an ARM64 environment (like M1 Mac), please set up to build images as AMD64.
+        - If you are using an ARM64 development environment, for example an M1 Mac, please set up to build images as AMD64.
     - Packer
-    - awscli
     - kubectl
     - helm
+    - [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
+    - [AWS Cloud Development Kit (AWS CDK)](https://docs.aws.amazon.com/cdk/v2/guide/getting_started.html#getting_started_install)
 
-TODO What about putting the game binary in a folder where it can be packaged up with the container and deployed to EKS? 
-TODO 
 
 ## Building the AMI
 
-Build an AMI to handle the latest GPU Driver for EKS.
+Build an AMI with the latest NVIDIA GPU drivers for the EKS cluster worker node.
 
-1. Navigate to the packer directory, and build.
+1. Install the required Packer plugins and navigate to the [Packer template directory](../packer/).
 
-TODO Update `eks-gpu-node.json` region, AMI owner?, k8 version, cuda version, ...
-
-```
+```console
 $ packer plugins install github.com/hashicorp/amazon
 $ cd pixel-streaming-on-eks/packer
-$ packer build eks-gpu-node.json
 ```
 
-2. Once the build completes successfully, take note of the AMI ID that begins with `ami-`.
+2. Create the instance profile needed for the Packer AMI builder instance to download the NVIDIA drivers
 
+```console
+$ aws iam create-role --role-name packer-instance-role --assume-role-policy-document file://packer-instance-trust-policy.json
+$ aws iam create-policy --policy-name packer-instance-profile-policy --policy-document file://packer-instance-profile-policy.json
+$ PACKER_ACCOUNT_ID=`aws sts get-caller-identity --query "Account" --output text`
+$ aws iam attach-role-policy --role-name packer-instance-role --policy-arn "arn:aws:iam::$PACKER_ACCOUNT_ID:policy/packer-instance-profile-policy"
+$ aws iam create-instance-profile --instance-profile-name packer-instance-profile
+$ aws iam add-role-to-instance-profile --instance-profile-name packer-instance-profile --role-name packer-instance-role
 ```
-==> amazon-ebs: Waiting for the instance to stop...
-==> amazon-ebs: Creating AMI eks-gpu-node-1.24-1676732590 from instance i-068f246c113c251df
-    amazon-ebs: AMI: ami-038246843a7aabe29
+
+3. Update the region and Kubernetes variables in the command below and execute the command to build the AMI for the pixel streaming node.
+
+```console
+$ packer build -var 'region=eu-west-2' -var 'k8_version=1.30' eks-gpu-node.pkr.hcl
+```
+
+4. Once the build completes successfully, take note of the AMI ID that begins with `ami-`. 
+
+```console
+==> amazon-ebs: Creating AMI eks-gpu-node-1.24-1676732590 from instance i-012346789012df
+    amazon-ebs: AMI: ami-0123456789012
 ==> amazon-ebs: Waiting for AMI to become ready...
-...
+```
+
+You can also query for the AMI ID using the AWS CLI.
+
+```console
+$ aws ec2 describe-images --owners self --filters "Name=tag:Name,Values=Packer*" --query 'Images[*].[ImageId,Name,ImageType,CreationDate]' --output table
+```
+
+5. Then make sure to remove the instance profile, role, and policy that are no longer needed.
+
+```console
+$ aws iam detach-role-policy --role-name packer-instance-role --policy-arn "arn:aws:iam::$PACKER_ACCOUNT_ID:policy/packer-instance-profile-policy"
+$ aws iam remove-role-from-instance-profile --instance-profile-name packer-instance-profile --role-name packer-instance-role
+$ aws iam delete-role --role-name packer-instance-role
+$ aws iam delete-policy --policy-arn "arn:aws:iam::$PACKER_ACCOUNT_ID:policy/packer-instance-profile-policy"
 ```
 
 ## Deploying the CDK App
-1. We will deploy the CDK App, which includes the EKS Cluster and Docker Image.
+1. We will no deploy the CDK App, which includes the EKS Cluster and Docker container images.
 
-If you are currently in the packer directory, return to the directory above. Ensure that there is a cdk.json file in the same directory.
+If you are currently in the `packer` directory, return to the directory above. Ensure that there is a `cdk.json` file in the same directory.
 
-```
+```console
 $ ls
 README.md  cdk.json ...
 ```
 
-2. Edit around line 22 of lib/eks-cluster-stack.ts to set access rights for an existing role or user to the EKS cluster. By default, a role named Admin is the target.
+2. Open the [lib/eks-cluster-stack.ts](../lib/eks-cluster-stack.ts) TypeScripts CDK file and update the deployment specific variables.
 
-If you prefer to set this without using CDK, refer to [Enabling IAM principal access to your cluster](https://docs.aws.amazon.com/eks/latest/userguide/add-user-role.html)  for guidance.
+    a) `EKS_ACCESS_ROLE` 
 
-```
-// Configure aws-auth to allow IAM Role for Admin to access EKS Cluster
-// https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_eks-readme.html#permissions-and-security
-const adminRole = iam.Role.fromRoleName(this, 'AdminRole', 'Admin') <= HERE
-cluster.awsAuth.addMastersRole(adminRole)
+    Change this to the name of an existing role or user to the EKS cluster. By default, a role named Admin is the target. If you prefer to set this outside of the CDK deployment, refer to [Enabling IAM principal access to your cluster](https://docs.aws.amazon.com/eks/latest/userguide/add-user-role.html)  for guidance.
 
-// For user
-// const user = iam.User.fromUserName(this, 'User', 'username')
-// cluster.awsAuth.addUserMapping(user, { groups: ['system:masters'] })
-```
+    b) `SOURCE_CIDR`
 
-3. Modify the allowedIpRange around line 39 of `lib/eks-cluster-stack.ts` to the IP range that you want to allow access to the demo.
-   To allow access from all IP addresses, specify `0.0.0.0/0`.
-```
-const allowedIpRange = ec2.Peer.ipv4('59.138.151.0/24') <= HERE
-```
+    Update this to the IP range of the device(s) that you will access the pixel streaming demo from. Best practice is to set this to a small range and not provide access to all external IPs.
 
-4. Change the imageId around line 67 of `lib/eks-cluster-stack.ts` to the ID of the AMI you created in the previous step.
-```
-const launchTemplate = new ec2.CfnLaunchTemplate(
-      this,
-      'NodeLaunchTemplate',
-      {
-        launchTemplateData: {
-          imageId: 'ami-038246843a7aabe29',  <= HERE
-          instanceType: 'g4dn.xlarge',
-          ...
+    c) `AMI_ID`
+
+    Update this constant to the ID of the AMI that was generated by the Packer build process.
+
+3. Install all Node dependencies and [bootstrap the CDK environment](https://docs.aws.amazon.com/cdk/v2/guide/bootstrapping.html), if required.
+
+```console
+$ npm install
+$ npx cdk bootstrap 
 ```
 
 5. Execute the following commands to deploy. Please run `npm install` and `npx cdk bootstrap` only for the first time.
-```
-$ npm install
-$ npx cdk bootstrap --cloudformation-execution-policies \
-  'arn:aws:iam::aws:policy/PowerUserAccess,arn:aws:iam::aws:policy/IAMFullAccess'
+
+```console
 $ npx cdk deploy --all --require-approval never
 
 Outputs:
