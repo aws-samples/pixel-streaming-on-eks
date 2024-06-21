@@ -9,7 +9,7 @@ fi
 REPLICAS=$1
 REPLICAS_PER_NODE=2
 ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
-REGION=eu-west-2
+REGION=$(aws configure get region)
 PORT_START=50000
 NODE_PORT_START=30000
 APP_TEMPLATE_FILE=./manifests/pixel-streaming.template.yaml
