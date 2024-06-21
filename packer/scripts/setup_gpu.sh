@@ -20,23 +20,6 @@ echo "* * Setting up NVIDIA drivers for containerd * *"
 sudo touch /etc/modprobe.d/nvidia.conf
 echo "options nvidia NVreg_EnableGpuFirmware=0" | sudo tee --append /etc/modprobe.d/nvidia.conf
 
-# Install nvidia-container-runtime DEPRECATED
-# distribution=$(. /etc/os-release;echo $ID$VERSION_ID)
-# curl -s -L https://nvidia.github.io/nvidia-container-runtime/$distribution/nvidia-container-runtime.repo |   sudo tee /etc/yum.repos.d/nvidia-container-runtime.repo
-# sudo yum install -y nvidia-container-runtime
-
-# Configuration for docker to use GPU
-# This setting is optional because Kubernetes 1.24 does NOT use Docker runtime.
-# https://kubernetes.io/blog/2020/12/02/dont-panic-kubernetes-and-docker/
-# sudo mkdir -p /etc/systemd/system/docker.service.d
-# sudo tee /etc/systemd/system/docker.service.d/override.conf <<EOF
-# [Service]
-# ExecStart=
-# ExecStart=/usr/bin/dockerd --host=fd:// --add-runtime=nvidia=/usr/bin/nvidia-container-runtime
-# EOF
-# sudo systemctl daemon-reload
-# sudo systemctl restart docker
-
 # Configuration for containerd to use GPU
 sudo sed -i -e "s/default_runtime_name = \"runc\"/default_runtime_name = \"nvidia\"/g" /etc/eks/containerd/containerd-config.toml
 sudo tee -a /etc/eks/containerd/containerd-config.toml << EOS
@@ -52,4 +35,4 @@ EOS
 
 echo "* * Restarting containerd * *"
 sudo systemctl restart containerd
-# sudo systemctl restart kubelet
+
