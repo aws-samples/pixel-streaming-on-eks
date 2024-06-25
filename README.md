@@ -1,17 +1,16 @@
 # pixel-streaming-on-eks
 
-Sample code for deploying Unreal Engine Pixel Streaming on Amazon EKS. To deploy the demo:
-
-- First follow the instructions to build and deploy an Unreal Engine 5 Pixel Streaming application, click [here](docs/UNREAL_ENGINE_EN.md).
-- Then follow the [demo deployment](docs/DEPLOY_DEMO.md) instructions.
-
-![](./architecture.png "Architecture diagram showing how users connect to the signalling-server in the Amazon EKS clustr and use the turn-server to access pixel stream container running the Unreal Engine application.")
+Sample code for deploying Unreal Engine Pixel Streaming on Amazon EKS. 
 
 ## Deployment
 
 1. First follow the instructions on how to build an Unreal Engine Pixel Streaming application [here](./docs/UNREAL_ENGINE_EN.md)
 
 2. Then build the node AMI and deploy the EKS cluster and container images using the instructions [here](./docs/DEPLOY_DEMO.md)
+
+## Architecture
+
+![](./architecture.png "Architecture diagram showing how users connect to the signalling-server in the Amazon EKS clustr and use the turn-server to access pixel stream container running the Unreal Engine application.")
 
 
 ## Important Notes
