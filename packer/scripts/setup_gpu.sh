@@ -1,23 +1,53 @@
 #!/usr/bin/env bash
 set -eu
 
-# Install nvidia-container-toolkit: https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html#installing-with-yum-or-dnf
-curl -s -L https://nvidia.github.io/libnvidia-container/stable/rpm/nvidia-container-toolkit.repo | \
-sudo tee /etc/yum.repos.d/nvidia-container-toolkit.repo
-sudo yum install -y nvidia-container-toolkit
 
+# For Ubuntu
+curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg \
+  && curl -s -L https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list | \
+  sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' | \
+  sudo tee /etc/apt/sources.list.d/nvidia-container-toolkit.list
+sudo apt-get update
+sudo apt-get install -y nvidia-container-toolkit
 
-# Install nvidia-driver and cuda
-sudo yum install -y gcc kernel-devel-$(uname -r)
+sudo apt install -y unzip
+curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" 
+unzip awscliv2.zip 
+sudo ./aws/install
+
+echo "* * Updating NVIDIA driver prerequisites * *"
+sudo apt-get install -y gcc make linux-headers-$(uname -r)
+cat << EOF | sudo tee --append /etc/modprobe.d/blacklist.conf
+blacklist vga16fb
+blacklist nouveau
+blacklist rivafb
+blacklist nvidiafb
+blacklist rivatv
+EOF
+echo 'GRUB_CMDLINE_LINUX="rdblacklist=nouveau"' | sudo tee --append /etc/default/grub
+sudo update-grub
+
 echo "* * Downloading NVIDIA drivers * *"
 aws s3 cp --recursive s3://ec2-linux-nvidia-drivers/latest/ .
 chmod +x NVIDIA-Linux-x86_64*.run
 echo "* * Installing the NVIDIA drivers * *"
-sudo CC=/usr/bin/gcc10-cc ./NVIDIA-Linux-x86_64*.run --silent
+sudo /bin/sh ./NVIDIA-Linux-x86_64*.run --silent
+
+# For Amazon Linux
+    # Install nvidia-container-toolkit: https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html#installing-with-yum-or-dnf
+    # curl -s -L https://nvidia.github.io/libnvidia-container/stable/rpm/nvidia-container-toolkit.repo | \
+    # sudo tee /etc/yum.repos.d/nvidia-container-toolkit.repo
+    # sudo yum install -y nvidia-container-toolkit
+    # Install nvidia-driver and cuda
+    # sudo yum install -y gcc kernel-devel-$(uname -r)
+    # echo "* * Downloading NVIDIA drivers * *"
+    # aws s3 cp --recursive s3://ec2-linux-nvidia-drivers/latest/ .
+    # chmod +x NVIDIA-Linux-x86_64*.run
+    # echo "* * Installing the NVIDIA drivers * *"
+    # sudo CC=/usr/bin/gcc10-cc ./NVIDIA-Linux-x86_64*.run --silent
 
 echo "* * Setting up NVIDIA drivers for containerd * *"
 
-sudo nvidia-ctk runtime configure --runtime=containerd
 sudo nvidia-ctk runtime configure --runtime=containerd
 
 # sudo touch /etc/modprobe.d/nvidia.conf

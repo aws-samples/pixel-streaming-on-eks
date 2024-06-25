@@ -6,9 +6,9 @@ Please ensure your environment meets the following requirements necessary for de
 - You have built an Unreal Engine Pixel Streaming application using the instructions [here](./UNREAL_ENGINE_EN.md)
 - The required AWS IAM permissions (IAM roles, IAM users, etc.) are set.
     - Administrator-level privileges are necessary.
-- You're logged in to Docker with a GitHub account linked to your Unreal Engine account. << TODO Do we need this if we use own game binary?
-    - For authentication methods, please refer to  [Working with the Container registry](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry#container-registry%E3%81%A7%E3%81%AE%E8%AA%8D%E8%A8%BC).
-    TODO personal access token classic, scope: read/write/delete:packages
+- You're logged in to Docker with a GitHub account linked to your Unreal Engine account.
+    - For authentication methods, please refer to  [Working with the Container registry](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry#container-registry%E3%81%A7%E3%81%AE%E8%AA%8D%E8%A8%BC). Make sure to set up the personal access token (classic) with the scope to `read/write/delete:packages` as described in the documentation.
+
 - The necessary software is installed.
     - Node.js (LTS version)
     - Docker
@@ -75,14 +75,16 @@ $ aws iam delete-instance-profile --instance-profile-name packer-instance-profil
 ## Deploying the CDK App
 1. We will no deploy the CDK App, which includes the EKS Cluster and Docker container images.
 
-If you are currently in the `packer` directory, return to the directory above. Ensure that there is a `cdk.json` file in the same directory.
+    If you are currently in the `packer` directory, return to the directory above. Ensure that there is a `cdk.json` file in the same directory.
 
 ```console
 $ ls
 README.md  cdk.json ...
 ```
 
-2. Open the [lib/eks-cluster-stack.ts](../lib/eks-cluster-stack.ts) TypeScripts CDK file and update the deployment specific variables.
+2. Open the file [containers/pixel-streaming/Dockerfile](../containers/pixel-streaming/Dockerfile) and replace the `UNREAL_ENGINE_APP` environment variable with the name of the `.sh` file used to launch your Unreal Engine application, for example `ThirdPersonShooter.sh`.
+
+3. Open the [lib/eks-cluster-stack.ts](../lib/eks-cluster-stack.ts) TypeScripts CDK file and update the deployment specific variables.
 
     a) `EKS_ACCESS_ROLE` 
 
@@ -100,7 +102,7 @@ README.md  cdk.json ...
 
     Verify that the Kubernetes version specified in the `new eks.Cluster(...)` call matches the version specified when generating the AMI with Packer.
 
-3. Install all Node dependencies and [bootstrap the CDK environment](https://docs.aws.amazon.com/cdk/v2/guide/bootstrapping.html), if required.
+4. Install all Node dependencies and [bootstrap the CDK environment](https://docs.aws.amazon.com/cdk/v2/guide/bootstrapping.html), if required.
 
 ```console
 $ npm install
@@ -127,20 +129,44 @@ NAME                                        STATUS   ROLES    AGE   VERSION
 ip-10-0-01-193.eu-west-2.compute.internal   Ready    <none>   11m   v1.30.0-eks-123456b
 ```
 
-## Set up the Kubernetes environment to make use of the GPU
-We will deploy the k8s-device-plugin and set up CUDA Time-Slicing. 
+**Congratulations!** You have now deployed the base Kubernetes cluster without the pixel streaming application.
 
-1. Install `nvidia-device-plugin` using Helm.
+## Set up the Kubernetes environment to make use of the GPU
+
+
+[Set up the NVIDIA Helm repo](https://docs.nvidia.com/datacenter/cloud-native/gpu-operator/latest/getting-started.html#procedure)
 
 ```console
-$ helm repo add nvdp https://nvidia.github.io/k8s-device-plugin
-$ helm repo update
-$ helm upgrade -i nvdp nvdp/nvidia-device-plugin \
-    --namespace nvidia-device-plugin \
-    --create-namespace \
-    --version 0.15.0 \
-    --set-file config.map.config=./manifests/nvidia-device-plugin-config.yaml
+$ helm repo add nvidia https://helm.ngc.nvidia.com/nvidia \
+    && helm repo update
 ```
+
+Set up the GPU operator using [pre-Installed NVIDIA GPU Drivers and NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/gpu-operator/latest/getting-started.html#pre-installed-nvidia-gpu-drivers-and-nvidia-container-toolkit)
+
+```console
+$ helm install --wait --generate-name \
+     -n gpu-operator --create-namespace \
+      nvidia/gpu-operator \
+      --set driver.enabled=false \
+      --set toolkit.enabled=false
+```
+
+
+## Set up GPU time-slicing
+
+Settgin up cluster-wide time slicing: https://docs.nvidia.com/datacenter/cloud-native/gpu-operator/latest/gpu-sharing.html#applying-one-cluster-wide-configuration
+
+```console
+$ cd manifests
+$ kubectl create -n gpu-operator -f time-slicing-config-all.yaml
+```
+
+```console
+$ kubectl patch clusterpolicies.nvidia.com/cluster-policy \
+    -n gpu-operator --type merge \
+    -p '{"spec": {"devicePlugin": {"config": {"name": "time-slicing-config-all", "default": "any"}}}}'
+```
+
 
 2. Wait for a while, then run the command `kubectl describe node`. If you can see four GPUs, then it's working correctly.
 
