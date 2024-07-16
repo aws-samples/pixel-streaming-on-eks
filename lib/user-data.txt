@@ -6,5 +6,9 @@ Content-Type: text/x-shellscript; charset="us-ascii"
 
 #!/usr/bin/env bash
 
-/etc/eks/bootstrap.sh PrototypeEksCluster --container-runtime containerd
+/etc/eks/bootstrap.sh PrototypeEksCluster --container-runtime containerd --kubelet-extra-args "--node-labels=hasGPU=yes"
+
+# Configure the NVIDIA Container Toolkit again in case bootstrap has overwritten /etc/containerd/config.toml
+nvidia-ctk runtime configure --runtime=containerd
+systemctl restart containerd
 --==MYBOUNDARY==--

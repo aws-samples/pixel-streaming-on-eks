@@ -27,25 +27,25 @@ Build an AMI with the latest NVIDIA GPU drivers for the EKS cluster worker node.
 1. Install the required Packer plugins and navigate to the [Packer template directory](../packer/).
 
 ```console
-$ packer plugins install github.com/hashicorp/amazon
-$ cd pixel-streaming-on-eks/packer
+packer plugins install github.com/hashicorp/amazon
+cd pixel-streaming-on-eks/packer
 ```
 
 2. Create the instance profile needed for the Packer AMI builder instance to download the NVIDIA drivers
 
 ```console
-$ aws iam create-role --role-name packer-instance-role --assume-role-policy-document file://packer-instance-trust-policy.json
-$ aws iam create-policy --policy-name packer-instance-profile-policy --policy-document file://packer-instance-profile-policy.json
-$ PACKER_ACCOUNT_ID=`aws sts get-caller-identity --query "Account" --output text`
-$ aws iam attach-role-policy --role-name packer-instance-role --policy-arn "arn:aws:iam::$PACKER_ACCOUNT_ID:policy/packer-instance-profile-policy"
-$ aws iam create-instance-profile --instance-profile-name packer-instance-profile
-$ aws iam add-role-to-instance-profile --instance-profile-name packer-instance-profile --role-name packer-instance-role
+aws iam create-role --role-name packer-instance-role --assume-role-policy-document file://packer-instance-trust-policy.json
+aws iam create-policy --policy-name packer-instance-profile-policy --policy-document file://packer-instance-profile-policy.json
+PACKER_ACCOUNT_ID=`aws sts get-caller-identity --query "Account" --output text`
+aws iam attach-role-policy --role-name packer-instance-role --policy-arn "arn:aws:iam::$PACKER_ACCOUNT_ID:policy/packer-instance-profile-policy"
+aws iam create-instance-profile --instance-profile-name packer-instance-profile
+aws iam add-role-to-instance-profile --instance-profile-name packer-instance-profile --role-name packer-instance-role
 ```
 
 3. Update the region and Kubernetes variables in the command below and execute the command to build the AMI for the pixel streaming node.
 
 ```console
-$ packer build -var 'region=eu-west-2' -var 'k8_version=1.29' eks-gpu-node.pkr.hcl
+packer build -var 'region=eu-west-2' -var 'k8_version=1.29' eks-gpu-node.pkr.hcl
 ```
 
 4. Once the build completes successfully, take note of the AMI ID that begins with `ami-`. 
@@ -59,17 +59,17 @@ eu-west-2: ami-123abc123abc123
 You can also query for the AMI ID using the AWS CLI.
 
 ```console
-$ aws ec2 describe-images --owners self --filters "Name=tag:Name,Values=Packer*" --query 'Images[*].[ImageId,Name,ImageType,CreationDate]' --output table
+aws ec2 describe-images --owners self --filters "Name=tag:Name,Values=Packer*" --query 'Images[*].[ImageId,Name,ImageType,CreationDate]' --output table
 ```
 
 5. Then make sure to remove the instance profile, role, and policy that are no longer needed.
 
 ```console
-$ aws iam detach-role-policy --role-name packer-instance-role --policy-arn "arn:aws:iam::$PACKER_ACCOUNT_ID:policy/packer-instance-profile-policy"
-$ aws iam remove-role-from-instance-profile --instance-profile-name packer-instance-profile --role-name packer-instance-role
-$ aws iam delete-role --role-name packer-instance-role
-$ aws iam delete-policy --policy-arn "arn:aws:iam::$PACKER_ACCOUNT_ID:policy/packer-instance-profile-policy"
-$ aws iam delete-instance-profile --instance-profile-name packer-instance-profile
+aws iam detach-role-policy --role-name packer-instance-role --policy-arn "arn:aws:iam::$PACKER_ACCOUNT_ID:policy/packer-instance-profile-policy"
+aws iam remove-role-from-instance-profile --instance-profile-name packer-instance-profile --role-name packer-instance-role
+aws iam delete-role --role-name packer-instance-role
+aws iam delete-policy --policy-arn "arn:aws:iam::$PACKER_ACCOUNT_ID:policy/packer-instance-profile-policy"
+aws iam delete-instance-profile --instance-profile-name packer-instance-profile
 ```
 
 ## Deploying the CDK App
@@ -78,8 +78,8 @@ $ aws iam delete-instance-profile --instance-profile-name packer-instance-profil
     If you are currently in the `packer` directory, return to the directory above. Ensure that there is a `cdk.json` file in the same directory.
 
 ```console
-$ ls
-README.md  cdk.json ...
+ls
+ README.md  cdk.json ...
 ```
 
 2. Open the file [containers/pixel-streaming/Dockerfile](../containers/pixel-streaming/Dockerfile) and replace the `UNREAL_ENGINE_APP` environment variable with the name of the `.sh` file used to launch your Unreal Engine application, for example `ThirdPersonShooter.sh`.
@@ -105,26 +105,26 @@ README.md  cdk.json ...
 4. Install all Node dependencies and [bootstrap the CDK environment](https://docs.aws.amazon.com/cdk/v2/guide/bootstrapping.html), if required.
 
 ```console
-$ npm install
-$ npx cdk bootstrap 
+npm install
+npx cdk bootstrap 
 ```
 
 5. Then deploy all stacks defines in the application.
 
 ```console
-$ npx cdk deploy --all --require-approval never
+npx cdk deploy --all --require-approval never
 ```
 
 6. After the stack has been deployed, we use the AWS CLI to set up `kubectl` to talk to our EKS managed Kubernetes cluster.
 
 ```console
-$ aws eks update-kubeconfig --name PrototypeEksCluster 
+aws eks update-kubeconfig --name PrototypeEksCluster 
 ```
 
 You can check that your `kubeconfig` has been correctly update by listing the single node in your cluster.
 
 ```console
-$ kubectl get nodes
+kubectl get nodes
 NAME                                        STATUS   ROLES    AGE   VERSION
 ip-10-0-01-193.eu-west-2.compute.internal   Ready    <none>   11m   v1.30.0-eks-123456b
 ```
@@ -137,18 +137,18 @@ ip-10-0-01-193.eu-west-2.compute.internal   Ready    <none>   11m   v1.30.0-eks-
 [Set up the NVIDIA Helm repo](https://docs.nvidia.com/datacenter/cloud-native/gpu-operator/latest/getting-started.html#procedure)
 
 ```console
-$ helm repo add nvidia https://helm.ngc.nvidia.com/nvidia \
+helm repo add nvidia https://helm.ngc.nvidia.com/nvidia \
     && helm repo update
 ```
 
 Set up the GPU operator using [pre-Installed NVIDIA GPU Drivers and NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/gpu-operator/latest/getting-started.html#pre-installed-nvidia-gpu-drivers-and-nvidia-container-toolkit)
 
 ```console
-$ helm install --wait --generate-name \
+helm install --wait --generate-name \
      -n gpu-operator --create-namespace \
       nvidia/gpu-operator \
       --set driver.enabled=false \
-      --set toolkit.enabled=false
+      --set toolkit.enabled=false 
 ```
 
 
@@ -157,12 +157,12 @@ $ helm install --wait --generate-name \
 Settgin up cluster-wide time slicing: https://docs.nvidia.com/datacenter/cloud-native/gpu-operator/latest/gpu-sharing.html#applying-one-cluster-wide-configuration
 
 ```console
-$ cd manifests
-$ kubectl create -n gpu-operator -f time-slicing-config-all.yaml
+cd manifests
+kubectl create -n gpu-operator -f time-slicing-config-all.yaml
 ```
 
 ```console
-$ kubectl patch clusterpolicies.nvidia.com/cluster-policy \
+kubectl patch clusterpolicies.nvidia.com/cluster-policy \
     -n gpu-operator --type merge \
     -p '{"spec": {"devicePlugin": {"config": {"name": "time-slicing-config-all", "default": "any"}}}}'
 ```
@@ -172,13 +172,13 @@ $ kubectl patch clusterpolicies.nvidia.com/cluster-policy \
 
 Time slicing is not enabled:
 ```console
-$ kubectl describe node | grep nvidia.com/gpu:
+kubectl describe node | grep nvidia.com/gpu:
   nvidia.com/gpu:              1
   nvidia.com/gpu:              1
 ```
 Time slicing is enabled:
 ```
-$ kubectl describe node | grep nvidia.com/gpu:
+kubectl describe node | grep nvidia.com/gpu:
   nvidia.com/gpu:              4
   nvidia.com/gpu:              4
 ```
@@ -187,12 +187,15 @@ $ kubectl describe node | grep nvidia.com/gpu:
 1. Execute `./scripts/deploy_demo.sh N`. `N` specifies the number of deployments. (Example: `./scripts/deploy_demo.sh 1`)
    Wait for a while, then execute ./scripts/get_addresses.sh to retrieve the URL for access.
 ```
-$ ./scripts/get_addresses.sh
-http://18.183.134.12:30000
+./scripts/get_addresses.sh
+ http://18.183.134.12:30000
 ```
 
 ## Deleting all the stacks
 You can delete the deployed environment with the following command. Since some components cannot be removed from CDK and will remain, open the [AWS CloudFormation console](https://console.aws.amazon.com/cloudformation/home) to check and manually delete them if unnecessary.
 ```
-$ npx cdk destroy --all
+aws ecr delete-repository --repository-name pixel-streaming --force
+aws ecr delete-repository --repository-name signalling-server --force
+aws ecr delete-repository --repository-name turn-server --force
+npx cdk destroy --all
 ```

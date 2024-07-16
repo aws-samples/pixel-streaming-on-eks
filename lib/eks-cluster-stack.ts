@@ -108,6 +108,7 @@ export class EksClusterStack extends cdk.Stack {
       labels: {
         // https://github.com/kubernetes/autoscaler/blob/master/cluster-autoscaler/cloudprovider/aws/README.md#special-note-on-gpu-instances
         'k8s.amazonaws.com/accelerator': 'nvidia-tesla-t4',
+        'hasGPU': 'yes',
       },
       tags: {
         // https://docs.aws.amazon.com/ja_jp/eks/latest/userguide/autoscaling.html

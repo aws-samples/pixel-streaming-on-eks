@@ -9,4 +9,4 @@ ENV RES_X=1920 \
 
 RUN chmod 755 ThirdPersonCityScape.sh
 
-CMD ["/bin/bash", "-c", "./${UNREAL_ENGINE_APP}} -PixelStreamingURL=${SIGNAL_URL} -RenderOffscreen -Unattended -ForceRes -ResX=${RES_X} -ResY=${RES_Y} -AllowPixelStreamingCommands ${EXTRA_ARGS}" ]
+CMD ["/bin/bash", "-c", "./${UNREAL_ENGINE_APP} -PixelStreamingURL=${SIGNAL_URL} -RenderOffscreen -Unattended -ForceRes -ResX=${RES_X} -ResY=${RES_Y} -AllowPixelStreamingCommands ${EXTRA_ARGS}" ]

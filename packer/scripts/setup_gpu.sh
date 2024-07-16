@@ -7,9 +7,17 @@ curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | sudo gpg --dear
   && curl -s -L https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list | \
   sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' | \
   sudo tee /etc/apt/sources.list.d/nvidia-container-toolkit.list
+
+echo "* * Updating packages * *"
 sudo apt-get update
+# Install Vulkan drivers for Ubuntu
+sudo apt install libvulkan1 -y
+
+
+echo "* * Installing nvidia-container-toolkit * *"
 sudo apt-get install -y nvidia-container-toolkit
 
+echo "* * Installing AWS CLI * *"
 sudo apt install -y unzip
 curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" 
 unzip awscliv2.zip 
@@ -30,6 +38,7 @@ sudo update-grub
 echo "* * Downloading NVIDIA drivers * *"
 aws s3 cp --recursive s3://ec2-linux-nvidia-drivers/latest/ .
 chmod +x NVIDIA-Linux-x86_64*.run
+
 echo "* * Installing the NVIDIA drivers * *"
 sudo /bin/sh ./NVIDIA-Linux-x86_64*.run --silent
 
@@ -47,7 +56,6 @@ sudo /bin/sh ./NVIDIA-Linux-x86_64*.run --silent
     # sudo CC=/usr/bin/gcc10-cc ./NVIDIA-Linux-x86_64*.run --silent
 
 echo "* * Setting up NVIDIA drivers for containerd * *"
-
 sudo nvidia-ctk runtime configure --runtime=containerd
 
 # sudo touch /etc/modprobe.d/nvidia.conf
@@ -65,6 +73,9 @@ sudo nvidia-ctk runtime configure --runtime=containerd
 # [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.nvidia.options]
 #    BinaryName = "/usr/bin/nvidia-container-runtime"
 # EOS
+
+echo "* * Config /etc/containerd/config.toml before updating with NVIDIA runtime * *\n\n"
+cat /etc/containerd/config.toml
 
 echo "* * Restarting containerd * *"
 sudo systemctl restart containerd
