@@ -42,7 +42,7 @@ aws iam create-instance-profile --instance-profile-name packer-instance-profile
 aws iam add-role-to-instance-profile --instance-profile-name packer-instance-profile --role-name packer-instance-role
 ```
 
-3. Update the region and Kubernetes variables in the command below and execute the command to build the AMI for the pixel streaming node.
+3. Update the region to where the cluster will be deployed and set the Kubernetes version you plan to use. Then execute the command to build the AMI for the pixel streaming node.
 
 ```console
 packer build -var 'region=eu-west-2' -var 'k8_version=1.29' eks-gpu-node.pkr.hcl
