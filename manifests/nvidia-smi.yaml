@@ -11,4 +11,4 @@ spec:
         - "nvidia-smi"
       resources:
         limits:
-          k8s.amazonaws.com/vgpu: 1
+          nvidia.com/gpu: 1
